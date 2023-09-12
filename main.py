@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 # import uvicorn
 from DBConnection import make_connection
@@ -23,6 +24,32 @@ cursor = conn.cursor()
 @app.get("/")
 def read_root():
     return {"message": "Hello, World"}
+
+
+@app.get("/images/{user_id}")
+def get_images(user_id: int):
+    try:
+        query = f"CALL sp_get_images({user_id})"
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        # Create a list of dictionaries with the desired structure
+        formatted_rows = []
+        for row in rows:
+            formatted_row = {
+                "id_file": row[0],
+                "owner_name": row[1],
+                "file_type": row[2],
+                "file_name": row[3],
+                "file_size": row[4],
+                "upload_time": row[5],
+                "source": row[6],
+                "category": row[7],
+            }
+            formatted_rows.append(formatted_row)
+        # Return the formatted result as JSON
+        return JSONResponse(content=formatted_rows)
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # CALL sp_upload_file(1, 'Image', 'example.jpg', 1024, 'C:\example.jpg');
