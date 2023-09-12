@@ -1,9 +1,25 @@
 import { useState } from "react";
 import "./App.css";
 import axios from "axios";
+import { api } from "./api";
 function App() {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const saveFileData = () => {
+    const fileData = {
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+    };
+    axios
+      .post(`${api}/file_data`, fileData)
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   const handleFileUpload = async () => {
     if (file) {
       const chunkSize = 1024 * 1024; // 1 MB chunks (adjust as needed)
@@ -16,18 +32,16 @@ function App() {
         const percentage = (end / file.size) * 100;
         console.log(`Percentage completed: ${percentage.toFixed(2)}%`);
         setUploadProgress(percentage.toFixed(2));
+        if (percentage === 100) {
+          saveFileData();
+        }
         // Create a FormData object and append the chunk to it
         const formData = new FormData();
         formData.append("file", chunk, file.name);
         // Send the chunk to the server
         try {
-          const response = await axios.post(
-            "http://192.168.1.2:8000/upload-chunk",
-            formData
-          );
-
-          console.log(response.data);
-
+          const response = await axios.post(`${api}/upload_file`, formData);
+          // console.log(response.data);
           // Update the start and end indices for the next chunk
           start = end;
           end = Math.min(start + chunkSize, file.size);
@@ -47,10 +61,18 @@ function App() {
         type="file"
         onChange={(e) => {
           setFile(e.target.files[0]);
+          console.log(e.target.files[0]);
         }}
       />
       <button className="btn" onClick={handleFileUpload}>
         Upload
+      </button>
+      <button
+        onClick={() => {
+          console.log(file);
+        }}
+      >
+        file
       </button>
       <progress
         className="progress progress-info w-56"
