@@ -3,6 +3,7 @@ from http.client import HTTPResponse
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.params import Query
 from fastapi.responses import JSONResponse
 
 # import uvicorn
@@ -56,6 +57,21 @@ def get_images(user_id: int):
 # CALL sp_upload_file(1, 'Image', 'example.jpg', 1024, 'C:\example.jpg');
 
 upload_dir = "/home/yair/Desktop/xd/media/"
+
+
+@app.post("/add_folder")
+async def add_folder(request: Request):
+    path = "/home/yair/Desktop/xd/media/"
+    try:
+        json_data = await request.json()
+        folders_name = json_data.get("name")
+        os.mkdir(f"{path}/{folders_name}")
+        query = "INSERT INTO Folders VALUES(%s,%s)"
+        cursor.execute(query, (0, folders_name))
+        conn.commit()
+        return 200
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.post("/upload_file")
