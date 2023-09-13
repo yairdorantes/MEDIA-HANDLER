@@ -1,9 +1,12 @@
 import axios from "axios";
 import { api } from "../api";
+import OutsideClickHandler from "react-outside-click-handler";
+
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 const FileActions = ({ file }) => {
   const [delQuestion, setDelQuestion] = useState(false);
+  const [fileDetails, setFileDetails] = useState(false);
   const delFile = () => {
     axios
       .delete(`${api}/del_file`, {
@@ -50,7 +53,7 @@ const FileActions = ({ file }) => {
             <path d="M5 21h14c1.103 0 2-.897 2-2v-8.668l-2 2V19H8.158c-.026 0-.053.01-.079.01-.033 0-.066-.009-.1-.01H5V5h6.847l2-2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2z" />
           </svg>
         </div>
-        <div>
+        <div onClick={() => setFileDetails(true)}>
           <svg
             className="w-7 h-7 hover:text-blue-500"
             fill="currentColor"
@@ -63,29 +66,43 @@ const FileActions = ({ file }) => {
           </svg>
         </div>
       </div>
-
-      <div
-        id="del-question"
-        className={`absolute transition-all duration-350 ${
-          delQuestion ? "bottom-10" : "-bottom-80"
-        }  w-80 rounded-lg bg-gray-900 p-4 -translate-x-1/2 left-1/2`}
-      >
-        <div className="text-center mb-10">Delete this item?</div>
-        <div className="flex justify-around gap-4">
-          <div
-            onClick={() => setDelQuestion(false)}
-            className="p-2 cursor-pointer bg-slate-800 w-24 rounded-3xl text-center text-gray-300 font-bold"
-          >
-            Cancel
-          </div>
-          <div
-            onClick={delFile}
-            className="p-2 cursor-pointer bg-slate-800 w-24 rounded-3xl text-center text-red-500 font-bold"
-          >
-            Delete
+      <OutsideClickHandler onOutsideClick={() => setDelQuestion(false)}>
+        <div
+          id="del-question"
+          className={`absolute transition-all duration-350 ${
+            delQuestion ? "bottom-10" : "-bottom-80"
+          }  w-80 rounded-lg bg-gray-900 p-4 -translate-x-1/2 left-1/2`}
+        >
+          <div className="text-center mb-10">Delete this item?</div>
+          <div className="flex justify-around gap-4">
+            <div
+              onClick={() => setDelQuestion(false)}
+              className="p-2 cursor-pointer bg-slate-800 w-24 rounded-3xl text-center text-gray-300 font-bold"
+            >
+              Cancel
+            </div>
+            <div
+              onClick={delFile}
+              className="p-2 cursor-pointer bg-slate-800 w-24 rounded-3xl text-center text-red-500 font-bold"
+            >
+              Delete
+            </div>
           </div>
         </div>
-      </div>
+      </OutsideClickHandler>
+
+      <OutsideClickHandler onOutsideClick={() => setFileDetails(false)}>
+        <div
+          id="file-info"
+          className={`absolute transition-all duration-350 ${
+            fileDetails ? "bottom-10" : "-bottom-80"
+          }  w-80 rounded-lg bg-gray-900 p-4 -translate-x-1/2 left-1/2`}
+        >
+          <div>Name: {file.file_name}</div>
+          <div>Size: {(file.file_size / 1024 / 1024).toFixed(2)}MB</div>
+          <div>Upload date: {file.upload_time}</div>
+        </div>
+      </OutsideClickHandler>
     </div>
   );
 };
