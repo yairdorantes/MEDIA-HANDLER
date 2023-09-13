@@ -2,14 +2,17 @@ import { Toaster } from "react-hot-toast";
 import ShowImages from "./components/ShowImages";
 import UploadFiles from "./components/UploadFiles";
 import ShowFolders from "./components/ShowFolders";
+import Paths from "./router/Paths";
 function App() {
   return (
     <>
-      {/* <UploadFiles /> */}
-      <div></div>
-      <Toaster />
-      <ShowFolders />
-      {/* <ShowImages /> */}
+      <Paths>
+        {/* <UploadFiles /> */}
+        <div></div>
+        <Toaster />
+        <ShowFolders />
+        {/* <ShowImages /> */}
+      </Paths>
     </>
   );
 }
