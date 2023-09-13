@@ -1,17 +1,19 @@
 import { useState } from "react";
+import Modal from "./Modal";
+import { useToggleValue } from "../myHooks/ToggleValue";
 
 const ShowImages = () => {
   const [currentImage, setCurrentImage] = useState({});
+  const { active, handleValue, setTrue, setFalse } = useToggleValue();
   const [images] = useState([
     {
-      id_file: 2,
+      id_file: 7,
       owner_name: "yair",
       file_type: "Image",
       file_name: "example.jpg",
       file_size: 1024,
       upload_time: "2023-09-11 18:32:24",
-      source:
-        "https://sm.ign.com/t/ign_es/screenshot/default/analisis-halo-infinite_cjdd.1200.jpg",
+      source: "/home/yair/Desktop/xd/media/xd.txt",
       category: "",
     },
     {
@@ -50,7 +52,8 @@ const ShowImages = () => {
   ]);
   const openImage = (image) => {
     setCurrentImage(image);
-    document.getElementById("my_modal_2").showModal();
+    console.log(image);
+    setTrue();
   };
   return (
     <>
@@ -66,15 +69,13 @@ const ShowImages = () => {
           ></div>
         ))}
       </div>
-      {/* Open the modal using document.getElementById('ID').showModal() method */}
-      <dialog id="my_modal_2" className="modal">
-        <div className="modal-box ">
-          <img className="w-auto h-auto" src={currentImage.source} alt="" />
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button>close</button>
-        </form>
-      </dialog>
+
+      <Modal
+        data={currentImage}
+        visibilityState={active}
+        handleVisibility={handleValue}
+        closeModal={setFalse}
+      />
     </>
   );
 };
