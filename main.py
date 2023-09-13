@@ -1,3 +1,5 @@
+from email.policy import HTTP
+from http.client import HTTPResponse
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +18,6 @@ app.add_middleware(
     ],  # You can specify specific HTTP methods (e.g., ["GET", "POST"])
     allow_headers=["*"],  # You can specify specific HTTP headers
 )
-
 conn = make_connection()
 cursor = conn.cursor()
 
@@ -70,6 +71,23 @@ async def upload_chunk(file: UploadFile = File(...)):
         # return {"message": "Chunk uploaded successfully"}
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.delete("/del_file")
+async def del_file(request: Request):
+    json_data = await request.json()
+    file_path = json_data.get("path")
+    file_id = json_data.get("file_id")
+    try:
+        os.remove(file_path)
+        print(f"File '{file_path}' has been successfully deleted.")
+        query = f"DELETE FROM Files where id_file={file_id};"
+        cursor.execute(query)
+        conn.commit()
+        return 200
+    except OSError as e:
+        print(f"Error deleting '{file_path}': {e}")
+        raise HTTPException(status_code=500)
 
 
 @app.post("/file_data")
