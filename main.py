@@ -1,5 +1,3 @@
-from email.policy import HTTP
-from http.client import HTTPResponse
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +32,6 @@ def get_files(folder: str):
         query = "SELECT * FROM Files WHERE folder = %s"
         cursor.execute(query, (folder,))
         rows = cursor.fetchall()
-
         # Create a list of dictionaries with the desired structure
         formatted_rows = []
         for row in rows:
@@ -102,9 +99,9 @@ async def add_folder(request: Request):
 @app.post("/upload_file")
 async def upload_chunk(file: UploadFile = File(...), location: str = Form(...)):
     upload_dir = f"/home/yair/Desktop/xd/media{location}"
+
     try:
         os.makedirs(upload_dir, exist_ok=True)
-
         # Construct the full path to save the file
         file_path = os.path.join(upload_dir, file.filename)
 
@@ -142,6 +139,37 @@ async def del_file(request: Request):
     except OSError as e:
         print(f"Error deleting '{file_path}': {e}")
         raise HTTPException(status_code=500)
+
+
+@app.delete("/del_files")
+async def del_files(request: Request):
+    try:
+        json_data = await request.json()
+        list_items = json_data.get("list_items")
+        # print(list_items)
+        cursor = conn.cursor()
+        for name in list_items:
+            del_item_by_name(name)
+            cursor.execute(f"DELETE FROM Files WHERE name = '{name}'")
+            conn.commit()
+        cursor.close()
+        return {"message": "Files deleted successfully"}
+    except Exception as e:
+        print(f"Error: {e}")
+        return {"error": "An error occurred while deleting files"}
+
+
+def del_item_by_name(name):
+    directory_path = "/home/yair/Desktop/xd/media"
+    file_name = name  # Replace with the name of the file you want to delete
+    # Traverse the directory tree and search for the file
+    for root, _, files in os.walk(directory_path):
+        if file_name in files:
+            # Construct the full path to the file
+            file_path = os.path.join(root, file_name)
+            # Delete the file
+            os.remove(file_path)
+            print(f"{file_name} found and deleted at: {file_path}")
 
 
 @app.post("/file_data")

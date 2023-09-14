@@ -1,0 +1,10 @@
+SHOW DATABASES;
+
+
+
+
+  CREATE TABLE IF NOT EXISTS CSV_data (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255),
+        position VARCHAR(255)
+    )
