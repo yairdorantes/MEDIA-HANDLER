@@ -1,9 +1,8 @@
 from email.policy import HTTP
 from http.client import HTTPResponse
 import os
-from fastapi import FastAPI, UploadFile, File, HTTPException, Request
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request, Form
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.params import Query
 from fastapi.responses import JSONResponse
 
 # import uvicorn
@@ -26,6 +25,34 @@ cursor = conn.cursor()
 @app.get("/")
 def read_root():
     return {"message": "Hello, World"}
+
+
+@app.get("/get_files/{folder}")
+def get_files(folder: str):
+    try:
+        # Use parameterized query to safely insert the folder value
+        query = "SELECT * FROM Files WHERE folder = %s"
+        cursor.execute(query, (folder,))
+        rows = cursor.fetchall()
+
+        # Create a list of dictionaries with the desired structure
+        formatted_rows = []
+        for row in rows:
+            formatted_row = {
+                "id_file": row[0],
+                "owner_name": row[1],
+                "file_type": row[2],
+                "file_name": row[3],
+                "file_size": row[4],
+                "upload_time": row[5].strftime("%Y-%m-%d %H:%M:%S"),
+                "source": row[6],
+                "category": row[7],
+                "folder": row[8],
+            }
+            formatted_rows.append(formatted_row)
+        return JSONResponse(content=formatted_rows)
+    except Exception as e:
+        return {"message": str(e)}
 
 
 @app.get("/images/{user_id}")
@@ -56,8 +83,6 @@ def get_images(user_id: int):
 
 # CALL sp_upload_file(1, 'Image', 'example.jpg', 1024, 'C:\example.jpg');
 
-upload_dir = "/home/yair/Desktop/xd/media/"
-
 
 @app.post("/add_folder")
 async def add_folder(request: Request):
@@ -75,7 +100,8 @@ async def add_folder(request: Request):
 
 
 @app.post("/upload_file")
-async def upload_chunk(file: UploadFile = File(...)):
+async def upload_chunk(file: UploadFile = File(...), location: str = Form(...)):
+    upload_dir = f"/home/yair/Desktop/xd/media{location}"
     try:
         os.makedirs(upload_dir, exist_ok=True)
 
@@ -87,6 +113,18 @@ async def upload_chunk(file: UploadFile = File(...)):
         # return {"message": "Chunk uploaded successfully"}
     except Exception as e:
         return {"error": str(e)}
+
+
+@app.get("/get_folders")
+async def get_folders():
+    cursor.execute("SELECT * FROM Folders")
+    rows = cursor.fetchall()
+    # Create a list of dictionaries with the desired structure
+    formatted_rows = []
+    for row in rows:
+        formatted_row = {"id_folder": row[0], "name": row[1]}
+        formatted_rows.append(formatted_row)
+    return JSONResponse(content=formatted_rows)
 
 
 @app.delete("/del_file")
@@ -113,14 +151,16 @@ async def file_data(request: Request):
         file_name = json_data.get("fileName")
         file_size = json_data.get("fileSize")
         file_type = json_data.get("fileType")
+        file_folder = json_data.get("fileFolder")
         file_comming = (
             1,
             file_type,
             file_name,
             file_size,
             f"http://192.168.1.2/files/{file_name}",
+            file_folder,
         )
-        query = "CALL sp_upload_file(%s, %s, %s, %s, %s)"
+        query = "CALL sp_upload_file(%s, %s, %s, %s, %s,%s)"
         cursor.execute(query, file_comming)
         conn.commit()
         # cursor.close()
@@ -128,7 +168,7 @@ async def file_data(request: Request):
         result = {"message": "nice"}
         return result
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Invalid JSON data: {str(e)}")
+        raise HTTPException(status_code=400, detail=e)
 
 
 # uvicorn.run(app, host="192.168.1.2", port=8000)

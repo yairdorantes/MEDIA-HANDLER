@@ -1,0 +1,2 @@
+sudo systemctl start firewalld
+sudo systemctl enable firewalld
