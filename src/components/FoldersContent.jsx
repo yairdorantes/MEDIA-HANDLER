@@ -2,9 +2,14 @@ import { useEffect, useState } from "react";
 import UploadFiles from "./UploadFiles";
 import axios from "axios";
 import { api } from "../api";
+import { useToggleList } from "../myHooks/ListToggle";
+import OutsideClickHandler from "react-outside-click-handler";
+import AllFileActions from "./AllFileActions";
 
 const FoldersContent = () => {
   const [files, setFiles] = useState([]);
+  const [delQuestion, setDelQuestion] = useState(true);
+  const { list, toggleList, setList } = useToggleList([]);
   const getFiles = () => {
     let pathname = window.location.pathname;
     let parts = pathname.split("/"); // Split the pathname by '/'
@@ -81,7 +86,17 @@ const FoldersContent = () => {
     if (normalizedType in fileIcons) {
       return fileIcons[normalizedType];
     }
-    return "defaultIcon";
+    return (
+      <svg
+        className={style}
+        viewBox="0 0 1024 1024"
+        fill="currentColor"
+        height="1em"
+        width="1em"
+      >
+        <path d="M854.6 288.7c6 6 9.4 14.1 9.4 22.6V928c0 17.7-14.3 32-32 32H192c-17.7 0-32-14.3-32-32V96c0-17.7 14.3-32 32-32h424.7c8.5 0 16.7 3.4 22.7 9.4l215.2 215.3zM790.2 326L602 137.8V326h188.2z" />
+      </svg>
+    );
   };
   return (
     <div>
@@ -89,14 +104,35 @@ const FoldersContent = () => {
       <UploadFiles />
       <div className="flex flex-wrap justify-center gap-10 mt-10">
         {files.map((file, i) => (
-          <div key={i} className="w-24 ">
+          <div
+            key={i}
+            className="w-24 relative"
+            onClick={() => toggleList(file.id_file)}
+          >
             <div className="">{fileTypeIcon(file.file_type, "w-16 h-16")}</div>
             <div className="overflow-ellipsis overflow-hidden">
               {file.file_name}
             </div>
+            {list.length > 0 &&
+              (list.includes(file.id_file) ? (
+                <div className="absolute bottom-1 right-1">
+                  <svg
+                    className="rounded-full bg-white text-blue-600 w-6 h-6"
+                    fill="currentColor"
+                    viewBox="0 0 16 16"
+                    height="1em"
+                    width="1em"
+                  >
+                    <path d="M16 8A8 8 0 110 8a8 8 0 0116 0zm-3.97-3.03a.75.75 0 00-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 00-1.06 1.06L6.97 11.03a.75.75 0 001.079-.02l3.992-4.99a.75.75 0 00-.01-1.05z" />
+                  </svg>
+                </div>
+              ) : (
+                <div className="absolute bottom-1 right-1 bg-black rounded-full border border-white w-6 h-6 bg-opacity-60" />
+              ))}
           </div>
         ))}
       </div>
+      {list.length > 0 && <AllFileActions />}
     </div>
   );
 };
